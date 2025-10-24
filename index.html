@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XToolab</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Monaco Editor -->
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.43.0/min/vs/loader.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="message-limit-warning" id="messageLimitWarning">
+        You've reached your free message limit. Sign to continue chatting!
+    </div>
+
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">X</div>
+                    <div class="logo-text">xtoolab</div>
+                </div>
+                <button class="new-chat-btn" onclick="startNewChat()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="16"/>
+                        <line x1="8" y1="12" x2="16" y2="12"/>
+                    </svg>
+                    New Prompt
+                </button>
+            </div>
+
+            <div class="chat-history">
+                <div class="history-section"></div>
+            </div>
+
+            <div class="user-info">
+                <button class="login-btn" id="loginBtn" onclick="showRegistrationModal()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                        <polyline points="10,17 15,12 10,7"/>
+                        <line x1="15" y1="12" x2="3" y2="12"/>
+                    </svg>
+                    Login
+                </button>
+                <div class="user-profile" id="userProfile">
+                    <div class="user-avatar" id="userAvatar">U</div>
+                    <div class="user-name" id="userName">User</div>
+                </div>
+                <button class="control-btn" onclick="handleUserMenuClick()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="1"/>
+                        <circle cx="19" cy="12" r="1"/>
+                        <circle cx="5" cy="12" r="1"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content" id="mainContent">
+            <div class="header">
+                <button class="menu-toggle" onclick="toggleSidebar()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="6" x2="21" y2="6"/>
+                        <line x1="3" y1="12" x2="21" y2="12"/>
+                        <line x1="3" y1="18" x2="21" y2="18"/>
+                    </svg>
+                </button>
+                <button class="toggle-panel-btn" id="togglePanelBtn" onclick="togglePanel()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="6" x2="15" y2="6"/>
+                        <line x1="3" y1="12" x2="21" y2="12"/>
+                        <line x1="3" y1="18" x2="15" y2="18"/>
+                    </svg>
+                </button>
+                <div class="logo">
+                    <div class="logo-icon">X</div>
+                </div>
+            </div>
+
+            <div class="chat-area" id="chatArea">
+                <div class="welcome-section" id="welcomeSection">
+                    <div class="welcome-icon">X</div>
+                    <h1 class="welcome-title">How can I help you?</h1>
+
+                    <div class="input-section">
+                        <div class="input-container">
+                            <textarea
+                                class="main-input"
+                                id="messageInput"
+                                placeholder="Message XToolab"
+                                rows="1"
+                            ></textarea>
+
+                            <div class="input-controls">
+                                <button class="control-btn send-btn" onclick="sendMessage()">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="22" y1="2" x2="11" y2="13"/>
+                                        <polygon points="22,2 15,22 11,13 2,9"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Monaco Editor Container with Tabs -->
+                <div class="editor-container" id="editorContainer">
+                    <div class="editor-tabs">
+                        <button class="editor-tab active" data-tab="editor" onclick="switchEditorTab('editor')">Editor</button>
+                        <button class="editor-tab" data-tab="response" onclick="switchEditorTab('response')" id="responseTab">Response</button>
+                    </div>
+
+                    <div class="editor-content active" id="editorContent">
+                        <div id="monaco-editor"></div>
+                    </div>
+
+                    <div class="editor-content" id="responseContent">
+                        <div id="monaco-response"></div>
+                    </div>
+                </div>
+
+                <div class="messages-container" id="messagesContainer">
+                </div>
+            </div>
+        </div>
+        <div class="chat-input-fixed" id="chatInputFixed">
+            <div class="chat-input-container">
+                <div class="input-container">
+                    <textarea
+                        class="main-input"
+                        id="messageInputFixed"
+                        placeholder="Message XToolab"
+                        rows="1"
+                    ></textarea>
+
+                    <div class="input-controls">
+                        <button class="control-btn send-btn" onclick="sendMessageFixed()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="22" y1="2" x2="11" y2="13"/>
+                                <polygon points="22,2 15,22 11,13 2,9"/>
+                            </svg>
+                        </button>
+                        <button class="control-btn editor-send-btn" onclick="sendEditorContent()" title="Send editor content">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="22" y1="2" x2="11" y2="13"/>
+                                <polygon points="22,2 15,22 11,13 2,9"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="centered-text-container">
+                <p id="dynamicBottomText">
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de registro -->
+    <div class="modal-overlay" id="registerModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+            <div class="modal-logo">
+                <div class="modal-icon">X</div>
+            </div>
+            <button class="google-btn" id="googleButton" onclick="signInWithGoogle()">
+                <i class="fab fa-google"></i> <span id="googleButtonText">Continue with Google</span>
+            </button>
+
+            <div class="divider"><span>Or with email</span></div>
+
+            <div class="modal-form">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" class="form-input" placeholder="Enter your email">
+                </div>
+
+                <button class="submit-btn" id="submitButton" onclick="handleEmailSignIn()">Sign</button>
+            </div>
+            <div class="privacy">
+                By continuing, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+            </div>
+        </div>
+    </div>
+    <script src="js/imageProcessor.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
