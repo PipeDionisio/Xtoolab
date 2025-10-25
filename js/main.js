@@ -1,30 +1,8 @@
 // CONFIGURACIÓN - Cambia este valor para modificar el límite de mensajes
 const MAX_FREE_MESSAGES = 3;
 
-// DOM elements
-const elements = {
-    sidebar: document.getElementById('sidebar'),
-    mainContent: document.getElementById('mainContent'),
-    welcomeSection: document.getElementById('welcomeSection'),
-    messagesContainer: document.getElementById('messagesContainer'),
-    editorContainer: document.getElementById('editorContainer'),
-    editorContent: document.getElementById('editorContent'),
-    responseContent: document.getElementById('responseContent'),
-    responseTab: document.getElementById('responseTab'),
-    messageInput: document.getElementById('messageInput'),
-    messageInputFixed: document.getElementById('messageInputFixed'),
-    chatInputFixed: document.getElementById('chatInputFixed'),
-    loadingIndicator: document.getElementById('loadingIndicator'),
-    togglePanelBtn: document.getElementById('togglePanelBtn'),
-    registerModal: document.getElementById('registerModal'),
-    monacoResponse: document.getElementById('monaco-response'),
-    loginBtn: document.getElementById('loginBtn'),
-    userProfile: document.getElementById('userProfile'),
-    userAvatar: document.getElementById('userAvatar'),
-    userName: document.getElementById('userName'),
-    messageLimitWarning: document.getElementById('messageLimitWarning'),
-    dynamicBottomText: document.getElementById('dynamicBottomText')
-};
+// DOM elements - will be initialized after DOM loads
+let elements = {};
 
 // App state
 const state = {
@@ -1280,18 +1258,43 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Free message limit:', MAX_FREE_MESSAGES);
     console.log('Database ID:', DATABASE_ID);
     console.log('API Key configured:', !!API_KEY);
-    
+
+    // Initialize DOM elements after DOM is ready
+    elements = {
+        sidebar: document.getElementById('sidebar'),
+        mainContent: document.getElementById('mainContent'),
+        welcomeSection: document.getElementById('welcomeSection'),
+        messagesContainer: document.getElementById('messagesContainer'),
+        editorContainer: document.getElementById('editorContainer'),
+        editorContent: document.getElementById('editorContent'),
+        responseContent: document.getElementById('responseContent'),
+        responseTab: document.getElementById('responseTab'),
+        messageInput: document.getElementById('messageInput'),
+        messageInputFixed: document.getElementById('messageInputFixed'),
+        chatInputFixed: document.getElementById('chatInputFixed'),
+        loadingIndicator: document.getElementById('loadingIndicator'),
+        togglePanelBtn: document.getElementById('togglePanelBtn'),
+        registerModal: document.getElementById('registerModal'),
+        monacoResponse: document.getElementById('monaco-response'),
+        loginBtn: document.getElementById('loginBtn'),
+        userProfile: document.getElementById('userProfile'),
+        userAvatar: document.getElementById('userAvatar'),
+        userName: document.getElementById('userName'),
+        messageLimitWarning: document.getElementById('messageLimitWarning'),
+        dynamicBottomText: document.getElementById('dynamicBottomText')
+    };
+
     checkAuthFromURL();
 
     // Initialize ImageProcessor
     if (window.ImageProcessor) {
         state.imageProcessor = new ImageProcessor();
-        
+
         // Start observing the response container
         if (elements.monacoResponse) {
             state.imageProcessor.observeContainer(elements.monacoResponse);
         }
-        
+
         console.log('ImageProcessor initialized and observing response container');
     }
 
