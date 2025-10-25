@@ -176,15 +176,16 @@
                 <i class="fab fa-google"></i> <span id="googleButtonText">Continue with Google</span>
             </button>
 
-            <div class="divider"><span>Or with email</span></div>
+            <div class="divider"><span>Secure OAuth Only</span></div>
 
             <div class="modal-form">
                 <div class="form-group">
                     <label for="email">Email Address</label>
-                    <input type="email" id="email" class="form-input" placeholder="Enter your email">
+                    <input type="email" id="email" class="form-input" placeholder="Enter your email" disabled>
+                    <small style="color: #666; font-size: 12px;">Email authentication disabled for security</small>
                 </div>
 
-                <button class="submit-btn" id="submitButton" onclick="handleEmailSignIn()">Sign</button>
+                <button class="submit-btn" id="submitButton" onclick="handleEmailSignIn()" disabled>Sign In (Disabled)</button>
             </div>
             <div class="privacy">
                 By continuing, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.

@@ -1,0 +1,9 @@
+{
+  "appwrite": {
+    "endpoint": "https://nyc.cloud.appwrite.io/v1",
+    "projectId": "68c3345200239a1d1d37",
+    "databaseId": "678c3e6f002d66845fa3",
+    "collectionId": "chat_sessions",
+    "apiKey": "standard_bb17065b87e9c39be46ca1d3b561fe49f0447642850225c6422dc958620c5f5dc9269c52edd4c350efb6487789a6a15ee9cdb95b1e4396794d6fcb89c193dcdf326f432bce6add65de4e441fbb29f59dd15a6ca156457c75a3680c7e29b254690d18c1e547ba3063d4d11fa43d328867828911a481420faf179693c0399f492e"
+  }
+}

@@ -1,26 +1,40 @@
-// Appwrite Configuration
-const DATABASE_ID = '678c3e6f002d66845fa3'; // Your actual database ID
-const COLLECTION_ID = 'chat_sessions';
-const PROJECT_ID = '68c3345200239a1d1d37'; // Your project ID
-
-// Appwrite instances
+// Appwrite Configuration - loaded from config.json
+let config = null;
 let client, account, databases, Query;
 
-// Initialize Appwrite and Databases with your API key
-function initAppwrite() {
+// Load configuration from config.json
+async function loadConfig() {
     try {
-        console.log('DEBUG: Initializing Appwrite with project ID:', PROJECT_ID);
-        console.log('DEBUG: Database ID:', DATABASE_ID);
-        console.log('DEBUG: Collection ID:', COLLECTION_ID);
+        const response = await fetch('./config.json');
+        config = await response.json();
+        console.log('DEBUG: Configuration loaded successfully');
+        return config;
+    } catch (error) {
+        console.error('DEBUG: Failed to load configuration:', error);
+        throw error;
+    }
+}
+
+// Initialize Appwrite client (no API key needed for client-side operations)
+async function initAppwrite() {
+    try {
+        // Load configuration first
+        await loadConfig();
+
+        console.log('DEBUG: Initializing Appwrite with project ID:', config.appwrite.projectId);
+        console.log('DEBUG: Database ID:', config.appwrite.databaseId);
+        console.log('DEBUG: Collection ID:', config.appwrite.collectionId);
+        console.log('DEBUG: Endpoint:', config.appwrite.endpoint);
         console.log('DEBUG: Current timestamp:', new Date().toISOString());
+        console.log('DEBUG: Note: No API key used - relying on Appwrite permissions');
 
         // Import Appwrite dynamically with proper error handling
         import('https://cdn.jsdelivr.net/npm/appwrite@13.0.1/+esm')
             .then(({ Client, Account, Databases, Query: AppwriteQuery }) => {
                 console.log('DEBUG: Appwrite import successful, creating client...');
                 client = new Client()
-                    .setEndpoint('https://nyc.cloud.appwrite.io/v1')
-                    .setProject(PROJECT_ID);
+                    .setEndpoint(config.appwrite.endpoint)
+                    .setProject(config.appwrite.projectId);
 
                 console.log('DEBUG: Client created, creating account and databases...');
                 account = new Account(client);
@@ -80,8 +94,8 @@ async function saveEditorSession() {
         // Try to update existing session first
         try {
             await databases.updateDocument(
-                DATABASE_ID,
-                COLLECTION_ID,
+                config.appwrite.databaseId,
+                config.appwrite.collectionId,
                 state.currentSessionId,
                 sessionData
             );
@@ -91,8 +105,8 @@ async function saveEditorSession() {
             // If document doesn't exist, create it
             if (error.code === 404 || error.message.includes('Document not found')) {
                 await databases.createDocument(
-                    DATABASE_ID,
-                    COLLECTION_ID,
+                    config.appwrite.databaseId,
+                    config.appwrite.collectionId,
                     state.currentSessionId,
                     {
                         ...sessionData,
@@ -123,13 +137,13 @@ async function loadChatHistory() {
 
     try {
         console.log('Loading chat history for user:', state.currentUser.$id);
-        console.log('Using database ID:', DATABASE_ID);
-        console.log('Using collection ID:', COLLECTION_ID);
+        console.log('Using database ID:', config.appwrite.databaseId);
+        console.log('Using collection ID:', config.appwrite.collectionId);
         console.log('Appwrite endpoint:', client?.config?.endpoint);
 
         const response = await databases.listDocuments(
-            DATABASE_ID,
-            COLLECTION_ID,
+            config.appwrite.databaseId,
+            config.appwrite.collectionId,
             [
                 Query.equal('user_id', state.currentUser.$id),
                 Query.orderDesc('updated_at'),
@@ -256,32 +270,9 @@ function signInWithGoogle() {
     }
 }
 
-// Handle email sign in
+// Handle email sign in - REMOVED: Insecure demo authentication
 function handleEmailSignIn() {
-    const email = document.getElementById('email')?.value;
-    if (!email) {
-        alert('Please enter your email address.');
-        return;
-    }
-
-    // Handle email authentication (sign in only)
-    if (account) {
-        // For demo purposes, simulate authentication
-        const mockUser = {
-            name: email.split('@')[0],
-            email: email,
-            $id: 'demo_user_' + Date.now()
-        };
-
-        updateAuthUI(mockUser);
-        closeModal();
-        alert('Signed in successfully! You now have unlimited messages.');
-    } else {
-        state.userRegistered = true;
-        updateAuthUI({ name: email.split('@')[0], email: email });
-        closeModal();
-        alert('Authentication simulation - you now have unlimited messages!');
-    }
+    alert('Email authentication is not available in this secure configuration. Please use Google OAuth for authentication.');
 }
 
 // Check authentication status
@@ -481,10 +472,11 @@ function setupEditorAutoSave() {
     });
 }
 // Initialize Appwrite when the script loads
-initAppwrite();
-
-// Check for auth status from URL parameters on page load
-checkAuthFromURL();
+(async () => {
+    await initAppwrite();
+    // Check for auth status from URL parameters on page load
+    checkAuthFromURL();
+})();
 
 // Create new session when starting new prompt
 function startNewEditorSession() {
@@ -503,6 +495,3 @@ function startNewEditorSession() {
 
     console.log('Started new editor session:', state.currentSessionId);
 }
-
-// Initialize Appwrite when the script loads
-initAppwrite();
