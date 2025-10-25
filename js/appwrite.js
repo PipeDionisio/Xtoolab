@@ -272,23 +272,28 @@ async function checkAuthStatus() {
     }
 }
 
-// Check for authentication success from URL parameters
 function checkAuthFromURL() {
     const urlParams = new URLSearchParams(window.location.search);
-
-    // Check if we're on a success page or have success parameters
-    if (window.location.pathname.includes('auth/success') || urlParams.get('success')) {
-        // Auth was successful, check status
-        setTimeout(checkAuthStatus, 1000);
-
-        // Clean up URL after processing
+    const authStatus = urlParams.get('auth');
+    
+    if (authStatus === 'success') {
+        console.log('Auth successful, checking status...');
         setTimeout(() => {
-            const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-            window.history.replaceState({}, document.title, cleanUrl);
-        }, 2000);
+            checkAuthStatus().then(() => {
+                // Clean URL
+                const cleanUrl = window.location.protocol + "//" + 
+                                window.location.host + window.location.pathname;
+                window.history.replaceState({}, document.title, cleanUrl);
+            });
+        }, 500);
+    } else if (authStatus === 'error') {
+        alert('Authentication failed. Please try again.');
+        // Clean URL
+        const cleanUrl = window.location.protocol + "//" + 
+                        window.location.host + window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
     }
 }
-
 // Get session title from editor content (first line or JSON structure)
 function getSessionTitleFromContent(content) {
     if (!content || content.trim() === '') return 'Empty Prompt';
