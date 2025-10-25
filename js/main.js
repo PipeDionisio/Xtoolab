@@ -855,24 +855,38 @@ function checkAuthFromURL() {
 
 // Send message from main input
 async function sendMessage() {
+    console.log('DEBUG: sendMessage called');
+    console.log('DEBUG: elements.messageInput:', elements.messageInput);
+
     const message = elements.messageInput?.value.trim();
+    console.log('DEBUG: message value:', message);
 
     if (message) {
         await processMessage(message);
+    } else {
+        console.log('DEBUG: No message to send');
     }
 }
 
 // Send message from fixed input
 async function sendMessageFixed() {
+    console.log('DEBUG: sendMessageFixed called');
+    console.log('DEBUG: elements.messageInputFixed:', elements.messageInputFixed);
+
     const message = elements.messageInputFixed?.value.trim();
+    console.log('DEBUG: message value:', message);
 
     if (message) {
         await processMessage(message, true);
+    } else {
+        console.log('DEBUG: No message to send from fixed input');
     }
 }
 
 // Process message (shared functionality)
 async function processMessage(message, isFixed = false) {
+    console.log('DEBUG: processMessage called with message:', message, 'isFixed:', isFixed);
+
     // Check if user has reached message limit
     if (state.messageCount >= MAX_FREE_MESSAGES && !state.userRegistered) {
         showMessageLimitWarning();
@@ -893,21 +907,30 @@ async function processMessage(message, isFixed = false) {
 
     // Clear input
     const inputElement = isFixed ? elements.messageInputFixed : elements.messageInput;
+    console.log('DEBUG: inputElement to clear:', inputElement);
     if (inputElement) {
         inputElement.value = '';
         inputElement.style.height = 'auto';
+    } else {
+        console.error('DEBUG: inputElement is null!');
     }
 
     // Show loading indicator
+    console.log('DEBUG: elements.loadingIndicator:', elements.loadingIndicator);
     if (elements.loadingIndicator) {
         elements.loadingIndicator.style.display = 'block';
+    } else {
+        console.error('DEBUG: loadingIndicator element not found!');
     }
 
     try {
+        console.log('DEBUG: Sending message to API...');
         // Send message to API
         const botResponse = await sendToAPI(message, 'https://7144fb0822b5.ngrok-free.app/webhook/f07ef21d-dae3-45ce-b457-57541e686137');
+        console.log('DEBUG: API response received:', botResponse);
 
         // Update Monaco Editor with the response
+        console.log('DEBUG: Updating editor content...');
         updateEditorContent(botResponse);
 
         // Save the editor session after updating content
@@ -915,13 +938,16 @@ async function processMessage(message, isFixed = false) {
             setTimeout(saveEditorSession, 1000);
         }
 
-        // After updating editor, send editor content to second webhook for dynamic bottom text       
+        // After updating editor, send editor content to second webhook for dynamic bottom text
         setTimeout(async () => {
             try {
+                console.log('DEBUG: Sending editor content to second webhook...');
                 updateDynamicBottomText('Loading...', true); // Show loading state
 
                 const editorContent = state.monacoEditor ? state.monacoEditor.getValue() : botResponse;
+                console.log('DEBUG: Editor content for second webhook:', editorContent);
                 const dynamicResponse = await sendToAPI(editorContent, 'https://7144fb0822b5.ngrok-free.app/webhook/78ec2241-6c9e-4d60-87ef-d1f30efec796');
+                console.log('DEBUG: Dynamic response received:', dynamicResponse);
 
                 // Update dynamic bottom text with response
                 updateDynamicBottomText(dynamicResponse);
@@ -929,9 +955,10 @@ async function processMessage(message, isFixed = false) {
                 console.error('Error with dynamic bottom text webhook:', error);
                 updateDynamicBottomText('Failed to load dynamic content', false, true);
             }
-        }, 500); 
+        }, 500);
 
     } catch (error) {
+        console.error('DEBUG: Error in processMessage:', error);
         updateEditorContent("// Sorry, I'm having trouble connecting to the server.\n// Please try again later.");
         updateDynamicBottomText('Connection error', false, true);
     } finally {
@@ -952,12 +979,16 @@ async function processMessage(message, isFixed = false) {
 
 // Send editor content to webhook
 async function sendEditorContent() {
+    console.log('DEBUG: sendEditorContent called');
+    console.log('DEBUG: state.monacoEditor:', state.monacoEditor);
+
     if (!state.monacoEditor) {
         alert('Editor is not ready yet. Please try again.');
         return;
     }
 
     const editorContent = state.monacoEditor.getValue().trim();
+    console.log('DEBUG: editorContent:', editorContent);
 
     if (!editorContent) {
         alert('Editor is empty. Please add some content first.');
@@ -965,16 +996,23 @@ async function sendEditorContent() {
     }
 
     // Show loading indicator
+    console.log('DEBUG: elements.loadingIndicator:', elements.loadingIndicator);
     if (elements.loadingIndicator) {
         elements.loadingIndicator.style.display = 'block';
+    } else {
+        console.error('DEBUG: loadingIndicator element not found!');
     }
 
     try {
+        console.log('DEBUG: Switching to response tab...');
         switchEditorTab('response');
         // Send editor content to the specified webhook
+        console.log('DEBUG: Sending editor content to generate-image webhook...');
         const response = await sendToAPI(editorContent, 'https://7144fb0822b5.ngrok-free.app/webhook/generate-image');
+        console.log('DEBUG: Image generation response:', response);
 
         // Update response content and switch to response tab
+        console.log('DEBUG: Updating response content...');
         updateResponseContent(response);
 
     } catch (error) {
@@ -1048,25 +1086,33 @@ function switchToChatMode() {
 
 // Parse API response data
 function parseApiResponse(data, contentType = null) {
+    console.log('DEBUG: parseApiResponse called with data type:', typeof data, 'contentType:', contentType);
+    console.log('DEBUG: data value:', data);
+
     try {
         // Handle null or undefined
         if (!data) {
+            console.log('DEBUG: No response data received');
             return "No response data received";
         }
 
         // Handle binary data (Uint8Array)
         if (data instanceof Uint8Array) {
+            console.log('DEBUG: Handling binary data (Uint8Array)');
             return createImageFromBinaryData(data, contentType);
         }
 
         // Handle string responses first
         if (typeof data === 'string') {
+            console.log('DEBUG: Handling string response');
             // Check if this looks like binary data (starts with non-printable characters)
             if (data.length > 0 && data.charCodeAt(0) < 32 && data.charCodeAt(0) !== 10 && data.charCodeAt(0) !== 13) {
+                console.log('DEBUG: Detected binary data in string response');
                 return "Received binary data (likely an image or file). Cannot display as text.";
             }
             // Check for common binary file signatures
             if (data.startsWith('\xFF\xD8\xFF') || data.startsWith('\x89PNG') || data.startsWith('GIF8') || data.startsWith('RIFF')) {
+                console.log('DEBUG: Detected image data in string response');
                 return "Received image data. Cannot display binary content as text.";
             }
             return data;
@@ -1079,8 +1125,10 @@ function parseApiResponse(data, contentType = null) {
 
         // Handle object responses
         if (typeof data === 'object' && data !== null) {
+            console.log('DEBUG: Handling object response');
             // Handle array responses
             if (Array.isArray(data) && data.length > 0) {
+                console.log('DEBUG: Handling array response');
                 if (data[0] && typeof data[0] === 'object') {
                     if (data[0].output) return data[0].output;
                     if (data[0].response) return data[0].response;
@@ -1092,6 +1140,7 @@ function parseApiResponse(data, contentType = null) {
             }
             // Handle single object responses
             else {
+                console.log('DEBUG: Handling single object response');
                 // Check common response fields
                 if (data.output) return data.output;
                 if (data.response) return data.response;
@@ -1118,6 +1167,7 @@ function parseApiResponse(data, contentType = null) {
         }
 
         // Fallback
+        console.log('DEBUG: Unexpected response type:', typeof data);
         return "Unexpected response type: " + typeof data;
 
     } catch (error) {
@@ -1249,16 +1299,25 @@ document.addEventListener('DOMContentLoaded', function() {
     const messageInput = document.getElementById('messageInput');
     const messageInputFixed = document.getElementById('messageInputFixed');
 
+    console.log('DEBUG: messageInput element:', messageInput);
+    console.log('DEBUG: messageInputFixed element:', messageInputFixed);
+
     if (messageInput) {
         messageInput.addEventListener('keydown', function(event) {
             handleKeyPress(event, this);
         });
+        console.log('DEBUG: Added event listener to messageInput');
+    } else {
+        console.error('DEBUG: messageInput element not found!');
     }
 
     if (messageInputFixed) {
         messageInputFixed.addEventListener('keydown', function(event) {
             handleKeyPress(event, this);
         });
+        console.log('DEBUG: Added event listener to messageInputFixed');
+    } else {
+        console.error('DEBUG: messageInputFixed element not found!');
     }
 });
 
