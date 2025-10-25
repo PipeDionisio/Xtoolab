@@ -1,8 +1,7 @@
 // Appwrite Configuration
-const DATABASE_ID = process.env.APPWRITE_DATABASE_ID;
-const COLLECTION_ID = process.env.APPWRITE_COLLECTION_ID;
-const PROJECT_ID = process.env.APPWRITE_PROJECT_ID;
-const API_KEY = process.env.APPWRITE_API_KEY;
+const DATABASE_ID = '678c3e6f002d66845fa3'; // Your actual database ID
+const COLLECTION_ID = 'chat_sessions';
+const PROJECT_ID = '68c3345200239a1d1d37'; // Your project ID
 
 // Appwrite instances
 let client, account, databases, Query;
@@ -15,14 +14,13 @@ function initAppwrite() {
             .then(({ Client, Account, Databases, Query: AppwriteQuery }) => {
                 client = new Client()
                     .setEndpoint('https://nyc.cloud.appwrite.io/v1')
-                    .setProject(PROJECT_ID)
-                    .setKey(API_KEY); // Add API key for server operations
+                    .setProject(PROJECT_ID);
 
                 account = new Account(client);
                 databases = new Databases(client);
                 Query = AppwriteQuery; // Store Query for use in functions
 
-                console.log('Appwrite initialized successfully with API key');
+                console.log('Appwrite initialized successfully');
 
                 // Check auth status after initialization
                 checkAuthStatus();
