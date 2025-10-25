@@ -886,7 +886,6 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('XToolab initialized with session ID:', state.currentSessionId);
     console.log('Free message limit:', MAX_FREE_MESSAGES);
     console.log('Database ID:', DATABASE_ID);
-    console.log('API Key configured:', !!API_KEY);
 
     // Initialize DOM elements after DOM is ready
     elements = {
