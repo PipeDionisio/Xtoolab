@@ -9,6 +9,10 @@ let client, account, databases, Query;
 // Initialize Appwrite and Databases with your API key
 function initAppwrite() {
     try {
+        console.log('Initializing Appwrite with project ID:', PROJECT_ID);
+        console.log('Database ID:', DATABASE_ID);
+        console.log('Collection ID:', COLLECTION_ID);
+
         // Import Appwrite dynamically with proper error handling
         import('https://cdn.jsdelivr.net/npm/appwrite@13.0.1/+esm')
             .then(({ Client, Account, Databases, Query: AppwriteQuery }) => {
@@ -21,15 +25,17 @@ function initAppwrite() {
                 Query = AppwriteQuery; // Store Query for use in functions
 
                 console.log('Appwrite initialized successfully');
+                console.log('Client endpoint:', client.config.endpoint);
+                console.log('Client project:', client.config.project);
 
                 // Check auth status after initialization
                 checkAuthStatus();
             })
             .catch(error => {
-                console.log('Appwrite initialization failed:', error);
+                console.error('Appwrite initialization failed:', error);
             });
     } catch (error) {
-        console.log('Appwrite import failed:', error);
+        console.error('Appwrite import failed:', error);
     }
 }
 
@@ -109,6 +115,9 @@ async function loadChatHistory() {
 
     try {
         console.log('Loading chat history for user:', state.currentUser.$id);
+        console.log('Using database ID:', DATABASE_ID);
+        console.log('Using collection ID:', COLLECTION_ID);
+        console.log('Appwrite endpoint:', client?.config?.endpoint);
 
         const response = await databases.listDocuments(
             DATABASE_ID,
@@ -124,6 +133,12 @@ async function loadChatHistory() {
         displayEditorHistory(response.documents);
     } catch (error) {
         console.error('Error loading editor history:', error);
+        console.error('Error details:', {
+            code: error.code,
+            message: error.message,
+            type: error.type,
+            response: error.response
+        });
         // Show empty history on error
         displayEditorHistory([]);
     }
@@ -194,11 +209,13 @@ function handleUserMenuClick() {
 
 // Google Sign In
 function signInWithGoogle() {
+    console.log('signInWithGoogle called, account available:', !!account);
     if (account) {
         try {
+            console.log('Creating OAuth2 session with success URL:', window.location.origin);
             account.createOAuth2Session(
                 'google',
-                window.location.origin + '/auth/success',
+                window.location.origin,  // Success URL is the current page
                 window.location.origin + '/auth/error'
             );
         } catch (error) {
@@ -206,6 +223,7 @@ function signInWithGoogle() {
             alert('Failed to initiate Google sign-in. Please try again.');
         }
     } else {
+        console.error('Account not available for sign-in');
         alert('Authentication service not available. Please try again later.');
     }
 }
@@ -252,6 +270,34 @@ async function checkAuthStatus() {
         const urlParams = new URLSearchParams(window.location.search);
         const authType = urlParams.get('type');
 
+function checkAuthFromURL() {
+    console.log('checkAuthFromURL called, checking URL params');
+    const urlParams = new URLSearchParams(window.location.search);
+    const authStatus = urlParams.get('auth');
+
+    console.log('Auth status from URL:', authStatus);
+
+    if (authStatus === 'success') {
+        console.log('Auth successful, checking status...');
+        setTimeout(() => {
+            checkAuthStatus().then(() => {
+                // Clean URL
+                const cleanUrl = window.location.protocol + "//" +
+                                window.location.host + window.location.pathname;
+                window.history.replaceState({}, document.title, cleanUrl);
+            });
+        }, 500);
+    } else if (authStatus === 'error') {
+        console.log('Auth error detected');
+        alert('Authentication failed. Please try again.');
+        // Clean URL
+        const cleanUrl = window.location.protocol + "//" +
+                        window.location.host + window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+    } else {
+        console.log('No auth status in URL');
+    }
+}
         if (authType === 'signup') {
             // Show welcome message for new sign-up
             setTimeout(() => {
@@ -416,6 +462,11 @@ function setupEditorAutoSave() {
         }
     });
 }
+// Initialize Appwrite when the script loads
+initAppwrite();
+
+// Check for auth status from URL parameters on page load
+checkAuthFromURL();
 
 // Create new session when starting new prompt
 function startNewEditorSession() {
