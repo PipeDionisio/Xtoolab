@@ -9,33 +9,41 @@ let client, account, databases, Query;
 // Initialize Appwrite and Databases with your API key
 function initAppwrite() {
     try {
-        console.log('Initializing Appwrite with project ID:', PROJECT_ID);
-        console.log('Database ID:', DATABASE_ID);
-        console.log('Collection ID:', COLLECTION_ID);
+        console.log('DEBUG: Initializing Appwrite with project ID:', PROJECT_ID);
+        console.log('DEBUG: Database ID:', DATABASE_ID);
+        console.log('DEBUG: Collection ID:', COLLECTION_ID);
+        console.log('DEBUG: Current timestamp:', new Date().toISOString());
 
         // Import Appwrite dynamically with proper error handling
         import('https://cdn.jsdelivr.net/npm/appwrite@13.0.1/+esm')
             .then(({ Client, Account, Databases, Query: AppwriteQuery }) => {
+                console.log('DEBUG: Appwrite import successful, creating client...');
                 client = new Client()
                     .setEndpoint('https://nyc.cloud.appwrite.io/v1')
                     .setProject(PROJECT_ID);
 
+                console.log('DEBUG: Client created, creating account and databases...');
                 account = new Account(client);
                 databases = new Databases(client);
                 Query = AppwriteQuery; // Store Query for use in functions
 
-                console.log('Appwrite initialized successfully');
-                console.log('Client endpoint:', client.config.endpoint);
-                console.log('Client project:', client.config.project);
+                console.log('DEBUG: Appwrite initialized successfully');
+                console.log('DEBUG: Client endpoint:', client.config.endpoint);
+                console.log('DEBUG: Client project:', client.config.project);
+                console.log('DEBUG: Account object created:', !!account);
+                console.log('DEBUG: Databases object created:', !!databases);
 
                 // Check auth status after initialization
+                console.log('DEBUG: Calling checkAuthStatus after initialization...');
                 checkAuthStatus();
             })
             .catch(error => {
-                console.error('Appwrite initialization failed:', error);
+                console.error('DEBUG: Appwrite initialization failed:', error);
+                console.error('DEBUG: Error stack:', error.stack);
             });
     } catch (error) {
-        console.error('Appwrite import failed:', error);
+        console.error('DEBUG: Appwrite import failed:', error);
+        console.error('DEBUG: Error stack:', error.stack);
     }
 }
 
@@ -146,8 +154,10 @@ async function loadChatHistory() {
 
 // Update UI based on authentication status
 function updateAuthUI(user = null) {
+    console.log('DEBUG: updateAuthUI called with user:', user ? 'present' : 'null');
     if (user && elements.loginBtn && elements.userProfile) {
         // User is authenticated
+        console.log('DEBUG: User authenticated, updating UI for logged in state');
         state.userRegistered = true;
         state.currentUser = user;
 
@@ -158,18 +168,22 @@ function updateAuthUI(user = null) {
         // Update user info
         if (elements.userName) {
             elements.userName.textContent = user.name || user.email || 'User';
+            console.log('DEBUG: Updated user name to:', elements.userName.textContent);
         }
 
         if (elements.userAvatar) {
             elements.userAvatar.textContent = (user.name || user.email || 'U')[0].toUpperCase();
+            console.log('DEBUG: Updated user avatar to:', elements.userAvatar.textContent);
         }
 
         // Load editor history
+        console.log('DEBUG: Scheduling loadChatHistory in 1 second...');
         setTimeout(loadChatHistory, 1000); // Give time for dependencies to load
 
-        console.log('User authenticated and UI updated:', user);
+        console.log('DEBUG: User authenticated and UI updated:', user);
     } else {
         // User is not authenticated
+        console.log('DEBUG: User not authenticated, updating UI for logged out state');
         state.userRegistered = false;
         state.currentUser = null;
 
@@ -179,14 +193,18 @@ function updateAuthUI(user = null) {
 
         // Clear editor history
         const historySection = document.querySelector('.history-section');
-        if (historySection) historySection.innerHTML = '';
+        if (historySection) {
+            historySection.innerHTML = '';
+            console.log('DEBUG: Cleared editor history');
+        }
 
-        console.log('User not authenticated');
+        console.log('DEBUG: User not authenticated, UI updated to logged out state');
     }
 
     // Hide message limit warning if user is registered
     if (state.userRegistered && elements.messageLimitWarning) {
         elements.messageLimitWarning.classList.remove('show');
+        console.log('DEBUG: Hid message limit warning for registered user');
     }
 }
 
@@ -209,21 +227,31 @@ function handleUserMenuClick() {
 
 // Google Sign In
 function signInWithGoogle() {
-    console.log('signInWithGoogle called, account available:', !!account);
+    console.log('DEBUG: signInWithGoogle called');
+    console.log('DEBUG: account available:', !!account);
+    console.log('DEBUG: client available:', !!client);
+    console.log('DEBUG: current URL:', window.location.href);
+
     if (account) {
         try {
-            console.log('Creating OAuth2 session with success URL:', window.location.origin);
+            const successUrl = window.location.origin;
+            const failureUrl = window.location.origin + '/auth/error';
+            console.log('DEBUG: Creating OAuth2 session with success URL:', successUrl, 'failure URL:', failureUrl);
+
             account.createOAuth2Session(
                 'google',
-                window.location.origin,  // Success URL is the current page
-                window.location.origin + '/auth/error'
+                successUrl,  // Success URL is the current page
+                failureUrl
             );
+            console.log('DEBUG: OAuth2 session creation initiated');
         } catch (error) {
-            console.error('Google sign-in failed:', error);
+            console.error('DEBUG: Google sign-in failed:', error);
+            console.error('DEBUG: Error stack:', error.stack);
             alert('Failed to initiate Google sign-in. Please try again.');
         }
     } else {
-        console.error('Account not available for sign-in');
+        console.error('DEBUG: Account not available for sign-in');
+        console.error('DEBUG: Appwrite initialization status - client:', !!client, 'databases:', !!databases);
         alert('Authentication service not available. Please try again later.');
     }
 }
@@ -258,46 +286,22 @@ function handleEmailSignIn() {
 
 // Check authentication status
 async function checkAuthStatus() {
+    console.log('DEBUG: checkAuthStatus called');
     if (!account) {
-        console.log('Account not available for auth check');
+        console.log('DEBUG: Account not available for auth check');
         return;
     }
 
     try {
+        console.log('DEBUG: Attempting to get account info...');
         const user = await account.get();
+        console.log('DEBUG: Account.get() succeeded, user:', user);
 
         // Check if this is a new user based on URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const authType = urlParams.get('type');
+        console.log('DEBUG: URL params - type:', authType);
 
-function checkAuthFromURL() {
-    console.log('checkAuthFromURL called, checking URL params');
-    const urlParams = new URLSearchParams(window.location.search);
-    const authStatus = urlParams.get('auth');
-
-    console.log('Auth status from URL:', authStatus);
-
-    if (authStatus === 'success') {
-        console.log('Auth successful, checking status...');
-        setTimeout(() => {
-            checkAuthStatus().then(() => {
-                // Clean URL
-                const cleanUrl = window.location.protocol + "//" +
-                                window.location.host + window.location.pathname;
-                window.history.replaceState({}, document.title, cleanUrl);
-            });
-        }, 500);
-    } else if (authStatus === 'error') {
-        console.log('Auth error detected');
-        alert('Authentication failed. Please try again.');
-        // Clean URL
-        const cleanUrl = window.location.protocol + "//" +
-                        window.location.host + window.location.pathname;
-        window.history.replaceState({}, document.title, cleanUrl);
-    } else {
-        console.log('No auth status in URL');
-    }
-}
         if (authType === 'signup') {
             // Show welcome message for new sign-up
             setTimeout(() => {
@@ -311,33 +315,47 @@ function checkAuthFromURL() {
         }
 
         updateAuthUI(user);
-        console.log('User authenticated:', user);
+        console.log('DEBUG: User authenticated successfully:', user);
     } catch (error) {
+        console.log('DEBUG: Account.get() failed, error:', error);
+        console.log('DEBUG: Error code:', error.code, 'type:', error.type);
         updateAuthUI(null);
-        console.log('User not authenticated:', error.message);
+        console.log('DEBUG: User not authenticated, UI updated to logged out state');
     }
 }
 
 function checkAuthFromURL() {
+    console.log('DEBUG: checkAuthFromURL called');
     const urlParams = new URLSearchParams(window.location.search);
     const authStatus = urlParams.get('auth');
-    
+    const authType = urlParams.get('type');
+    console.log('DEBUG: URL params - auth:', authStatus, 'type:', authType);
+    console.log('DEBUG: Full URL:', window.location.href);
+
     if (authStatus === 'success') {
-        console.log('Auth successful, checking status...');
+        console.log('DEBUG: Auth successful, checking status...');
         setTimeout(() => {
             checkAuthStatus().then(() => {
+                console.log('DEBUG: checkAuthStatus completed after URL auth success');
                 // Clean URL
-                const cleanUrl = window.location.protocol + "//" + 
+                const cleanUrl = window.location.protocol + "//" +
                                 window.location.host + window.location.pathname;
+                console.log('DEBUG: Cleaning URL to:', cleanUrl);
                 window.history.replaceState({}, document.title, cleanUrl);
+            }).catch(error => {
+                console.error('DEBUG: checkAuthStatus failed after URL auth success:', error);
             });
         }, 500);
     } else if (authStatus === 'error') {
+        console.log('DEBUG: Auth error detected in URL');
         alert('Authentication failed. Please try again.');
         // Clean URL
-        const cleanUrl = window.location.protocol + "//" + 
+        const cleanUrl = window.location.protocol + "//" +
                         window.location.host + window.location.pathname;
+        console.log('DEBUG: Cleaning URL after auth error to:', cleanUrl);
         window.history.replaceState({}, document.title, cleanUrl);
+    } else {
+        console.log('DEBUG: No auth status in URL');
     }
 }
 // Get session title from editor content (first line or JSON structure)
