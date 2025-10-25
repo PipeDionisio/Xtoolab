@@ -895,7 +895,25 @@ document.addEventListener('click', function(event) {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('XToolab initialized with session ID:', state.currentSessionId);
     console.log('Free message limit:', MAX_FREE_MESSAGES);
-    console.log('Database ID:', DATABASE_ID);
+    console.log('DEBUG: Checking if config is loaded for Database ID log...');
+    // Check if config is available (loaded asynchronously)
+    if (typeof config !== 'undefined' && config && config.appwrite) {
+        console.log('Database ID:', config.appwrite.databaseId);
+        // Set global DATABASE_ID for backward compatibility
+        window.DATABASE_ID = config.appwrite.databaseId;
+        console.log('DEBUG: Set global DATABASE_ID to:', window.DATABASE_ID);
+    } else {
+        console.log('Database ID: Config not loaded yet, will be available after Appwrite initialization');
+        // Fallback: try to set from config.json directly if available
+        setTimeout(() => {
+            if (typeof config !== 'undefined' && config && config.appwrite) {
+                window.DATABASE_ID = config.appwrite.databaseId;
+                console.log('DEBUG: Set global DATABASE_ID in timeout to:', window.DATABASE_ID);
+            } else {
+                console.error('DEBUG: Config still not available, DATABASE_ID remains undefined');
+            }
+        }, 1000);
+    }
 
     // Initialize DOM elements after DOM is ready
     elements = {
